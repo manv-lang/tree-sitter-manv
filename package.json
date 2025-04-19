@@ -1,0 +1,13 @@
+{
+    "name": "tree-sitter-manv",
+    "version": "0.1.0",
+    "description": "Tree-sitter grammar for the manv language",
+    "main": "grammar.js",
+    "keywords": ["tree-sitter", "grammar"],
+    "devDependencies": {
+      "tree-sitter-cli": "^0.20.0"
+    },
+    "scripts": {
+      "build": "tree-sitter generate"
+    }
+  }
