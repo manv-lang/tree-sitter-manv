@@ -1,0 +1,96 @@
+# =========================
+# Tree-sitter generated files
+# =========================
+
+# Generated parser sources
+/src/parser.c
+/src/parser.cc
+/src/parser.cpp
+/src/scanner.c
+/src/scanner.cc
+/src/scanner.cpp
+
+# Node types JSON
+/src/node-types.json
+
+# Grammar build artifacts
+*.o
+*.obj
+*.so
+*.dll
+*.dylib
+*.a
+
+# =========================
+# Build directories
+# =========================
+
+build/
+out/
+dist/
+target/
+bin/
+
+# =========================
+# Node / NPM
+# =========================
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+
+# Optional — keep package-lock if desired
+# package-lock.json
+
+# =========================
+# Tree-sitter CLI cache
+# =========================
+
+.tree-sitter/
+.cache/
+
+# =========================
+# Rust bindings (optional)
+# =========================
+
+/Cargo.lock
+/target/
+
+# =========================
+# Go bindings (optional)
+# =========================
+
+*.test
+*.out
+/vendor/
+
+# =========================
+# Swift bindings (optional)
+# =========================
+
+.build/
+DerivedData/
+
+# =========================
+# Python bindings (optional)
+# =========================
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# =========================
+# Editor / OS junk
+# =========================
+
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

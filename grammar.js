@@ -1,150 +1,120 @@
-/**
- * Tree-sitter grammar for the ManV programming language.
- * 
- * ManV is a systems programming language targeting x86-64 Linux.
- * This grammar supports the unified syntax with:
- * - Type declarations (int, float, char, str, void, bool, array<T>, T*, gc<T>, etc.)
- * - Variable declarations with unified syntax
- * - Function declarations
- * - Struct declarations
- * - Typedef declarations
- * - Include statements
- * - Control flow (if/else, while, for)
- * - Syscalls
- * - Expressions and operators
- */
+const PREC = {
+  TERNARY: 1,
+  OR: 2,
+  AND: 3,
+  BIT_OR: 4,
+  BIT_XOR: 5,
+  BIT_AND: 6,
+  EQUALITY: 7,
+  COMPARISON: 8,
+  SHIFT: 9,
+  ADD: 10,
+  MUL: 11,
+  UNARY: 12,
+  CALL: 13,
+};
 
 module.exports = grammar({
   name: "manv",
 
   extras: $ => [
     $.comment,
-    /\s/
+    /\s/,
   ],
 
   conflicts: $ => [
-    [$.type, $.identifier],
-    [$.expression, $.type],
+    [$.type_atom, $.primary_expression],
+    [$.generic_type, $.primary_expression],
   ],
 
   rules: {
-    // ============================================================================
-    // Source File
-    // ============================================================================
-
     source_file: $ => repeat(choice(
       $.import_statement,
-      $.function_declaration,
-      $.struct_declaration,
+      $.use_declaration,
+      $.pub_use_declaration,
       $.typedef_declaration,
-      $.variable_declaration,
-      $.constant_declaration,
+      $.struct_declaration,
+      $.impl_declaration,
       $.extern_declaration,
+      $.function_declaration,
+      $.macro_declaration,
+      $.variable_declaration
     )),
-
-    // ============================================================================
-    // Comments
-    // ============================================================================
 
     comment: $ => token(choice(
       seq("//", /.*/),
       seq("/*", /[^*]*\*+([^/*][^*]*\*+)*/, "/")
     )),
 
-    // ============================================================================
-    // Literals
-    // ============================================================================
-
     integer_literal: $ => token(choice(
-      seq(/[0-9]+/),
+      /[0-9]+/,
       seq("0x", /[0-9a-fA-F]+/),
       seq("0b", /[01]+/),
       seq("0o", /[0-7]+/)
     )),
 
-    float_literal: $ => token(
-      choice(
-        seq(/[0-9]+\.[0-9]+/, optional(seq(/[eE][+-]?[0-9]+/))),
-        seq(/[0-9]+/, /[eE][+-]?[0-9]+/)
-      )
-    ),
+    float_literal: $ => token(choice(
+      seq(/[0-9]+\.[0-9]+/, optional(/[eE][+-]?[0-9]+/)),
+      seq(/[0-9]+/, /[eE][+-]?[0-9]+/)
+    )),
 
-    string_literal: $ => token(
-      seq(
-        '"',
-        repeat(choice(
-          /[^"\\]+/,
-          seq("\\", /./)
-        )),
-        '"'
-      )
-    ),
+    string_literal: $ => token(seq(
+      '"',
+      repeat(choice(/[^"\\]+/, seq("\\", /./))),
+      '"'
+    )),
 
-    char_literal: $ => token(
-      seq(
-        "'",
-        choice(
-          /[^'\\]/,
-          seq("\\", /./)
-        ),
-        "'"
-      )
-    ),
+    char_literal: $ => token(seq(
+      "'",
+      choice(/[^'\\]/, seq("\\", /./)),
+      "'"
+    )),
 
     boolean_literal: $ => choice("true", "false"),
-
     null_literal: $ => "null",
 
-    array_literal: $ => seq(
-      "[",
-      commaSep($.expression),
-      "]"
-    ),
-
-    // ============================================================================
-    // Identifiers
-    // ============================================================================
+    array_literal: $ => seq("[", commaSep($.expression), "]"),
 
     identifier: $ => /[a-zA-Z_][a-zA-Z0-9_]*/,
 
-    // ============================================================================
-    // Types
-    // ============================================================================
-
     primitive_type: $ => choice(
-      "int",
-      "float",
-      "char",
-      "str",
-      "void",
-      "bool",
-      "byte"
+      "i8", "i16", "i32", "i64", "i128",
+      "u8", "u16", "u32", "u64", "u128",
+      "isize", "usize",
+      "f32", "f64",
+      "int", "uint", "byte", "float",
+      "bool", "char", "str", "void", "arena"
     ),
 
     type: $ => choice(
+      $.pointer_type,
+      $.type_atom
+    ),
+
+    type_atom: $ => choice(
       $.primitive_type,
       $.array_type,
-      $.pointer_type,
       $.generic_type,
       $.option_type,
+      $.result_type,
+      $.map_type,
       $.gc_type,
       $.arena_ref_type,
-      $.arena_type,
       $.bytes_type,
-      $.identifier  // User-defined types (structs, typedefs)
+      $.identifier
+    ),
+
+    pointer_type: $ => seq(
+      $.type_atom,
+      repeat1("*")
     ),
 
     array_type: $ => seq(
       "array",
       "<",
       $.type,
-      optional(seq(",", $.integer_literal)),
+      optional(seq(",", choice($.integer_literal, $.identifier))),
       ">"
-    ),
-
-    pointer_type: $ => seq(
-      $.type,
-      repeat1("*")
     ),
 
     generic_type: $ => seq(
@@ -154,59 +124,54 @@ module.exports = grammar({
       ">"
     ),
 
-    option_type: $ => seq(
-      "Option",
-      "<",
-      $.type,
-      ">"
-    ),
-
-    gc_type: $ => seq(
-      "gc",
-      "<",
-      $.type,
-      ">"
-    ),
-
-    arena_ref_type: $ => seq(
-      "arena_ref",
-      "<",
-      $.type,
-      ">"
-    ),
-
-    arena_type: $ => "arena",
-
-    bytes_type: $ => seq(
-      "bytes",
-      optional(seq("<", $.integer_literal, ">"))
-    ),
-
-    // ============================================================================
-    // Import/Include Statements
-    // ============================================================================
+    option_type: $ => seq("Option", "<", $.type, ">"),
+    result_type: $ => seq("Result", "<", $.type, ",", $.type, ">"),
+    map_type: $ => seq("Map", "<", $.type, ",", $.type, ">"),
+    gc_type: $ => seq("gc", "<", $.type, ">"),
+    arena_ref_type: $ => seq("arena_ref", "<", $.type, ">"),
+    bytes_type: $ => seq("bytes", optional(seq("<", $.integer_literal, ">"))),
 
     import_statement: $ => seq(
       "include",
       choice(
-        $.string_literal,  // include "file.mv"
+        seq($.string_literal, optional(seq("as", field("alias", $.identifier)))),
         seq(
-          $.identifier,    // include symbol from "file.mv"
+          field("symbol", $.identifier),
           "from",
-          $.string_literal,
-          optional(seq("as", $.identifier))
+          field("path", $.string_literal),
+          optional(seq("as", field("alias", $.identifier)))
         )
       ),
       ";"
     ),
 
-    // ============================================================================
-    // Function Declaration
-    // ============================================================================
+    use_declaration: $ => seq(
+      "use",
+      choice($.identifier, $.string_literal),
+      ";"
+    ),
+
+    pub_use_declaration: $ => seq(
+      "pub",
+      "use",
+      field("module", $.identifier),
+      ":",
+      choice(
+        "*",
+        commaSep1($.reexport_symbol)
+      ),
+      ";"
+    ),
+
+    reexport_symbol: $ => seq(
+      field("name", $.identifier),
+      optional(seq("as", field("alias", $.identifier)))
+    ),
 
     function_declaration: $ => seq(
       "fn",
-      $.identifier,
+      field("name", $.identifier),
+      optional($.generic_parameter_list),
       "(",
       commaSep($.parameter),
       ")",
@@ -214,30 +179,31 @@ module.exports = grammar({
       choice(";", $.block)
     ),
 
-    parameter: $ => seq(
-      $.identifier,
-      optional("&"),  // Reference parameter
-      ":",
-      $.type
+    generic_parameter_list: $ => seq(
+      "<",
+      commaSep1($.identifier),
+      ">"
     ),
 
-    // ============================================================================
-    // Struct Declaration
-    // ============================================================================
+    parameter: $ => choice(
+      seq(field("type", $.type), optional("&"), field("name", $.identifier)),
+      seq(field("name", $.identifier), ":", field("type", $.type))
+    ),
 
     struct_declaration: $ => seq(
       "struct",
       optional($.alignas_attribute),
-      $.identifier,
+      field("name", $.identifier),
+      optional(seq("extends", $.type)),
       "{",
       repeat($.struct_field),
       "}"
     ),
 
     struct_field: $ => seq(
-      $.identifier,
+      field("name", $.identifier),
       ":",
-      $.type,
+      field("type", $.type),
       ";"
     ),
 
@@ -248,43 +214,28 @@ module.exports = grammar({
       ")"
     ),
 
-    // ============================================================================
-    // Typedef Declaration
-    // ============================================================================
-
-    typedef_declaration: $ => seq(
-      "typedef",
-      $.type,
-      optional(repeat1("*")),  // Pointer typedef
-      $.identifier,
-      ";"
+    typedef_declaration: $ => choice(
+      seq(
+        "typedef",
+        field("name", $.identifier),
+        "=",
+        field("aliased_type", $.type),
+        ";"
+      ),
+      seq(
+        "typedef",
+        field("aliased_type", $.type),
+        field("name", $.identifier),
+        ";"
+      )
     ),
-
-    // ============================================================================
-    // Variable Declaration
-    // ============================================================================
 
     variable_declaration: $ => seq(
-      $.type,
-      optional("*"),  // Pointer
-      $.identifier,
-      optional(seq("=", $.expression)),
+      field("type", $.type),
+      field("name", $.identifier),
+      optional(seq("=", field("value", $.expression))),
       ";"
     ),
-
-    constant_declaration: $ => seq(
-      "const",
-      $.identifier,
-      ":",
-      $.type,
-      "=",
-      $.expression,
-      ";"
-    ),
-
-    // ============================================================================
-    // Extern Declaration
-    // ============================================================================
 
     extern_declaration: $ => seq(
       "extern",
@@ -294,9 +245,55 @@ module.exports = grammar({
       )
     ),
 
-    // ============================================================================
-    // Block and Statements
-    // ============================================================================
+    impl_declaration: $ => seq(
+      "impl",
+      field("target", $.type),
+      "{",
+      repeat(choice(
+        $.constructor_declaration,
+        $.method_declaration
+      )),
+      "}"
+    ),
+
+    constructor_declaration: $ => seq(
+      "constructor",
+      "(",
+      commaSep($.parameter),
+      ")",
+      $.block
+    ),
+
+    method_declaration: $ => seq(
+      "fn",
+      field("name", $.identifier),
+      optional($.generic_parameter_list),
+      "(",
+      commaSep($.method_parameter),
+      ")",
+      optional(seq("->", $.type)),
+      choice(";", $.block)
+    ),
+
+    method_parameter: $ => choice(
+      "self",
+      seq("self", "&"),
+      $.parameter
+    ),
+
+    macro_declaration: $ => seq(
+      "macro",
+      field("name", $.identifier),
+      "(",
+      commaSep($.macro_parameter),
+      ")",
+      $.block
+    ),
+
+    macro_parameter: $ => choice(
+      $.identifier,
+      seq("$", $.identifier)
+    ),
 
     block: $ => seq(
       "{",
@@ -312,43 +309,35 @@ module.exports = grammar({
       $.while_statement,
       $.for_statement,
       $.return_statement,
+      $.break_statement,
+      $.continue_statement,
       $.syscall_statement,
+      $.try_statement,
+      $.raise_statement,
       $.block
     ),
 
-    // ============================================================================
-    // Assignment
-    // ============================================================================
-
     assignment_statement: $ => seq(
       $.expression,
-      choice("=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^="),
+      choice("=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>="),
       $.expression,
       ";"
     ),
-
-    // ============================================================================
-    // Expression Statement
-    // ============================================================================
 
     expression_statement: $ => seq(
       $.expression,
       ";"
     ),
 
-    // ============================================================================
-    // Control Flow
-    // ============================================================================
-
     if_statement: $ => seq(
       "if",
       "(",
       $.expression,
       ")",
-      choice($.block, $.statement),
+      $.block,
       optional(seq(
         "else",
-        choice($.block, $.statement)
+        $.block
       ))
     ),
 
@@ -357,22 +346,30 @@ module.exports = grammar({
       "(",
       $.expression,
       ")",
-      choice($.block, $.statement)
+      $.block
     ),
 
     for_statement: $ => seq(
       "for",
       "(",
-      choice(
-        $.variable_declaration,
-        $.expression_statement,
-        ";"
-      ),
+      optional($.for_initializer),
+      ";",
       optional($.expression),
       ";",
       optional($.expression),
       ")",
-      choice($.block, $.statement)
+      $.block
+    ),
+
+    for_initializer: $ => choice(
+      $.for_variable_declaration,
+      $.expression
+    ),
+
+    for_variable_declaration: $ => seq(
+      field("type", $.type),
+      field("name", $.identifier),
+      optional(seq("=", $.expression))
     ),
 
     return_statement: $ => seq(
@@ -381,111 +378,138 @@ module.exports = grammar({
       ";"
     ),
 
-    // ============================================================================
-    // Syscall
-    // ============================================================================
+    break_statement: $ => seq("break", ";"),
+    continue_statement: $ => seq("continue", ";"),
 
     syscall_statement: $ => seq(
       "syscall",
       $.expression,
       repeat(seq(",", $.expression)),
-      optional(seq(",", $.identifier)),  // Error output
       ";"
     ),
 
-    // ============================================================================
-    // Expressions
-    // ============================================================================
+    try_statement: $ => seq(
+      "try",
+      $.block,
+      repeat1($.except_clause),
+      optional($.finally_clause)
+    ),
+
+    except_clause: $ => seq(
+      "except",
+      optional(seq($.identifier, "as", $.identifier)),
+      $.block
+    ),
+
+    finally_clause: $ => seq(
+      "finally",
+      $.block
+    ),
+
+    raise_statement: $ => seq(
+      "raise",
+      optional($.expression),
+      ";"
+    ),
 
     expression: $ => choice(
+      $.ternary_expression,
       $.binary_expression,
       $.unary_expression,
+      $.new_expression,
       $.call_expression,
       $.method_call_expression,
       $.member_expression,
       $.index_expression,
       $.cast_expression,
       $.sizeof_expression,
-      $.addressof_expression,
-      $.dereference_expression,
       $.parenthesized_expression,
       $.primary_expression
     ),
 
+    ternary_expression: $ => prec.right(PREC.TERNARY, seq(
+      $.expression,
+      "?",
+      $.expression,
+      ":",
+      $.expression
+    )),
+
     binary_expression: $ => choice(
-      // Logical (lowest precedence)
-      prec.left(1, seq($.expression, "||", $.expression)),
-      prec.left(2, seq($.expression, "&&", $.expression)),
-      // Bitwise
-      prec.left(3, seq($.expression, "|", $.expression)),
-      prec.left(4, seq($.expression, "^", $.expression)),
-      prec.left(5, seq($.expression, "&", $.expression)),
-      // Equality
-      prec.left(6, seq($.expression, "==", $.expression)),
-      prec.left(6, seq($.expression, "!=", $.expression)),
-      // Comparison
-      prec.left(7, seq($.expression, "<", $.expression)),
-      prec.left(7, seq($.expression, "<=", $.expression)),
-      prec.left(7, seq($.expression, ">", $.expression)),
-      prec.left(7, seq($.expression, ">=", $.expression)),
-      // Shift
-      prec.left(8, seq($.expression, "<<", $.expression)),
-      prec.left(8, seq($.expression, ">>", $.expression)),
-      // Additive
-      prec.left(9, seq($.expression, "+", $.expression)),
-      prec.left(9, seq($.expression, "-", $.expression)),
-      // Multiplicative
-      prec.left(10, seq($.expression, "*", $.expression)),
-      prec.left(10, seq($.expression, "/", $.expression)),
-      prec.left(10, seq($.expression, "%", $.expression))
+      prec.left(PREC.OR, seq($.expression, "||", $.expression)),
+      prec.left(PREC.AND, seq($.expression, "&&", $.expression)),
+      prec.left(PREC.BIT_OR, seq($.expression, "|", $.expression)),
+      prec.left(PREC.BIT_XOR, seq($.expression, "^", $.expression)),
+      prec.left(PREC.BIT_AND, seq($.expression, "&", $.expression)),
+      prec.left(PREC.EQUALITY, seq($.expression, "==", $.expression)),
+      prec.left(PREC.EQUALITY, seq($.expression, "!=", $.expression)),
+      prec.left(PREC.COMPARISON, seq($.expression, "<", $.expression)),
+      prec.left(PREC.COMPARISON, seq($.expression, "<=", $.expression)),
+      prec.left(PREC.COMPARISON, seq($.expression, ">", $.expression)),
+      prec.left(PREC.COMPARISON, seq($.expression, ">=", $.expression)),
+      prec.left(PREC.SHIFT, seq($.expression, "<<", $.expression)),
+      prec.left(PREC.SHIFT, seq($.expression, ">>", $.expression)),
+      prec.left(PREC.ADD, seq($.expression, "+", $.expression)),
+      prec.left(PREC.ADD, seq($.expression, "-", $.expression)),
+      prec.left(PREC.MUL, seq($.expression, "*", $.expression)),
+      prec.left(PREC.MUL, seq($.expression, "/", $.expression)),
+      prec.left(PREC.MUL, seq($.expression, "%", $.expression))
     ),
 
     unary_expression: $ => choice(
-      seq("-", $.expression),
-      seq("+", $.expression),
-      seq("!", $.expression),
-      seq("~", $.expression),
-      seq("--", $.expression),
-      seq("++", $.expression),
-      prec(11, seq($.expression, "--")),
-      prec(11, seq($.expression, "++"))
+      prec(PREC.UNARY, seq("-", $.expression)),
+      prec(PREC.UNARY, seq("+", $.expression)),
+      prec(PREC.UNARY, seq("!", $.expression)),
+      prec(PREC.UNARY, seq("~", $.expression)),
+      prec(PREC.UNARY, seq("&", $.expression)),
+      prec(PREC.UNARY, seq("*", $.expression)),
+      prec(PREC.UNARY, seq("--", $.expression)),
+      prec(PREC.UNARY, seq("++", $.expression))
     ),
 
-    call_expression: $ => seq(
-      $.expression,
+    new_expression: $ => seq(
+      "new",
+      $.type,
       "(",
       commaSep($.expression),
       ")"
     ),
 
-    method_call_expression: $ => seq(
-      $.expression,
-      ".",
-      $.identifier,
+    call_expression: $ => prec.left(PREC.CALL, seq(
+      field("function", $.expression),
       "(",
       commaSep($.expression),
       ")"
-    ),
+    )),
 
-    member_expression: $ => seq(
-      $.expression,
+    method_call_expression: $ => prec.left(PREC.CALL, seq(
+      field("receiver", $.expression),
       ".",
-      $.identifier
-    ),
+      field("method", $.identifier),
+      "(",
+      commaSep($.expression),
+      ")"
+    )),
 
-    index_expression: $ => seq(
-      $.expression,
+    member_expression: $ => prec.left(PREC.CALL, seq(
+      field("object", $.expression),
+      ".",
+      field("property", $.identifier)
+    )),
+
+    index_expression: $ => prec.left(PREC.CALL, seq(
+      field("array", $.expression),
       "[",
-      $.expression,
+      field("index", $.expression),
       "]"
-    ),
+    )),
 
-    cast_expression: $ => seq(
+    cast_expression: $ => prec.left(PREC.UNARY, seq(
       "(",
       $.type,
       ")",
       $.expression
-    ),
+    )),
 
     sizeof_expression: $ => seq(
       "sizeof",
@@ -493,16 +517,6 @@ module.exports = grammar({
         seq("(", $.type, ")"),
         $.expression
       )
-    ),
-
-    addressof_expression: $ => seq(
-      "&",
-      $.expression
-    ),
-
-    dereference_expression: $ => seq(
-      "*",
-      $.expression
     ),
 
     parenthesized_expression: $ => seq(
@@ -519,14 +533,11 @@ module.exports = grammar({
       $.boolean_literal,
       $.null_literal,
       $.array_literal,
+      "self",
       $.identifier
     ),
-  }
+  },
 });
-
-/**
- * Helper functions for comma-separated lists
- */
 
 function commaSep(rule) {
   return optional(commaSep1(rule));

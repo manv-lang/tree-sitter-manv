@@ -1,13 +1,37 @@
 {
     "name": "tree-sitter-manv",
     "version": "0.1.0",
-    "description": "Tree-sitter grammar for the manv language",
+    "description": "Tree-sitter grammar for the ManV programming language",
     "main": "grammar.js",
-    "keywords": ["tree-sitter", "grammar"],
+    "keywords": [
+        "tree-sitter",
+        "grammar",
+        "manv",
+        "programming-language"
+    ],
+    "author": "ManV Team",
+    "license": "MIT",
     "devDependencies": {
-      "tree-sitter-cli": "^0.20.0"
+        "tree-sitter-cli": "^0.24.7"
     },
     "scripts": {
-      "build": "tree-sitter generate"
+        "build": "tree-sitter generate",
+        "test": "tree-sitter test",
+        "parse": "tree-sitter parse",
+        "generate": "tree-sitter generate"
+    },
+    "tree-sitter": {
+        "scope": "source.manv",
+        "file-types": [
+            "mv"
+        ],
+        "highlights": "queries/highlights.scm"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/manv-lang/tree-sitter-manv"
+    },
+    "dependencies": {
+        "nan": "^2.25.0"
     }
-  }
+}

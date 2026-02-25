@@ -1,0 +1,722 @@
+================================================================================
+Basic Function Declaration
+================================================================================
+
+fn main() -> int {
+    return 0;
+}
+
+---
+(source_file
+  (function_declaration
+    (identifier)
+    (parameter_list)
+    (type)
+    (block
+      (return_statement
+        (integer_literal)))))
+
+================================================================================
+Function with Parameters
+================================================================================
+
+fn add(a: int, b: int) -> int {
+    return a + b;
+}
+
+---
+(source_file
+  (function_declaration
+    (identifier)
+    (parameter_list
+      (parameter
+        (identifier)
+        (type))
+      (parameter
+        (identifier)
+        (type)))
+    (type)
+    (block
+      (return_statement
+        (binary_expression
+          (identifier)
+          (identifier))))))
+
+================================================================================
+Variable Declaration
+================================================================================
+
+int x = 42;
+float y = 3.14;
+str* message = "Hello";
+
+---
+(source_file
+  (variable_declaration
+    (type)
+    (identifier)
+    (integer_literal))
+  (variable_declaration
+    (type)
+    (identifier)
+    (float_literal))
+  (variable_declaration
+    (type)
+    (identifier)
+    (string_literal)))
+
+================================================================================
+Struct Declaration
+================================================================================
+
+struct Point {
+    x: float;
+    y: float;
+}
+
+---
+(source_file
+  (struct_declaration
+    (identifier)
+    (struct_field_list
+      (struct_field
+        (identifier)
+        (type))
+      (struct_field
+        (identifier)
+        (type)))))
+
+================================================================================
+Include Statement
+================================================================================
+
+include "math";
+include "io" as io_module;
+
+---
+(source_file
+  (import_statement
+    (string_literal))
+  (import_statement
+    (string_literal)
+    (identifier)))
+
+================================================================================
+If Statement
+================================================================================
+
+if (x > 0) {
+    print("positive");
+} else {
+    print("non-positive");
+}
+
+---
+(source_file
+  (if_statement
+    (binary_expression
+      (identifier)
+      (integer_literal))
+    (block
+      (expression_statement
+        (call_expression
+          (identifier)
+          (string_literal))))
+    (block
+      (expression_statement
+        (call_expression
+          (identifier)
+          (string_literal)))))
+
+================================================================================
+While Loop
+================================================================================
+
+while (i < 10) {
+    i = i + 1;
+}
+
+---
+(source_file
+  (while_statement
+    (binary_expression
+      (identifier)
+      (integer_literal))
+    (block
+      (assignment_statement
+        (identifier)
+        (binary_expression
+          (identifier)
+          (integer_literal))))))
+
+================================================================================
+For Loop
+================================================================================
+
+for (int i = 0; i < 10; i++) {
+    print(i);
+}
+
+---
+(source_file
+  (for_statement
+    (variable_declaration
+      (type)
+      (identifier)
+      (integer_literal))
+    (binary_expression
+      (identifier)
+      (integer_literal))
+    (unary_expression
+      (identifier))
+    (block
+      (expression_statement
+        (call_expression
+          (identifier)
+          (identifier))))))
+
+================================================================================
+Syscall Statement
+================================================================================
+
+syscall 1, 2, 3, error;
+
+---
+(source_file
+  (syscall_statement
+    (integer_literal)
+    (integer_literal)
+    (integer_literal)
+    (identifier)))
+
+================================================================================
+Array Type
+================================================================================
+
+array<int, 10> numbers;
+array<float> values;
+
+---
+(source_file
+  (variable_declaration
+    (array_type
+      (type)
+      (integer_literal))
+    (identifier))
+  (variable_declaration
+    (array_type
+      (type))
+    (identifier)))
+
+================================================================================
+Pointer Type
+================================================================================
+
+int* ptr;
+float** matrix;
+
+---
+(source_file
+  (variable_declaration
+    (pointer_type
+      (type))
+    (identifier))
+  (variable_declaration
+    (pointer_type
+      (pointer_type
+        (type)))
+    (identifier)))
+
+================================================================================
+Method Call
+================================================================================
+
+obj.method(arg1, arg2);
+
+---
+(source_file
+  (expression_statement
+    (method_call_expression
+      (identifier)
+      (identifier)
+      (expression_list
+        (identifier)
+        (identifier)))))
+
+================================================================================
+Member Access
+================================================================================
+
+point.x = 10.0;
+point.y = 20.0;
+
+---
+(source_file
+  (assignment_statement
+    (member_expression
+      (identifier)
+      (identifier))
+    (float_literal))
+  (assignment_statement
+    (member_expression
+      (identifier)
+      (identifier))
+    (float_literal)))
+
+================================================================================
+Constructor
+================================================================================
+
+struct Point {
+    x: float;
+    y: float;
+}
+
+impl Point {
+    constructor(x: float, y: float) {
+        self.x = x;
+        self.y = y;
+    }
+}
+
+---
+(source_file
+  (struct_declaration
+    (identifier)
+    (struct_field_list
+      (struct_field
+        (identifier)
+        (type))
+      (struct_field
+        (identifier)
+        (type))))
+  (impl_declaration
+    (identifier)
+    (constructor_declaration
+      (parameter_list
+        (parameter
+          (identifier)
+          (type))
+        (parameter
+          (identifier)
+          (type)))
+      (block
+        (assignment_statement
+          (member_expression
+            (identifier)
+            (identifier))
+          (identifier))
+        (assignment_statement
+          (member_expression
+            (identifier)
+            (identifier))
+          (identifier)))))
+
+================================================================================
+Exception Handling
+================================================================================
+
+try {
+    risky_operation();
+} except Error as e {
+    handle_error(e);
+} finally {
+    cleanup();
+}
+
+---
+(source_file
+  (try_statement
+    (block
+      (expression_statement
+        (call_expression
+          (identifier))))
+    (except_clause
+      (identifier)
+      (identifier)
+      (block
+        (expression_statement
+          (call_expression
+            (identifier)
+            (identifier)))))
+    (finally_clause
+      (block
+        (expression_statement
+          (call_expression
+            (identifier))))))
+
+================================================================================
+Macro Declaration
+================================================================================
+
+macro debug_print(msg) {
+    print("DEBUG: " + msg);
+}
+
+---
+(source_file
+  (macro_declaration
+    (identifier)
+    (macro_parameter_list
+      (macro_parameter
+        (identifier)))
+    (block
+      (expression_statement
+        (call_expression
+          (identifier)
+          (binary_expression
+            (string_literal)
+            (identifier)))))))
+
+================================================================================
+Pub Use Declaration
+================================================================================
+
+pub use math: add, sub, mul, div;
+pub use io: print as output;
+
+---
+(source_file
+  (pub_use_declaration
+    (identifier)
+    (reexport_symbol_list
+      (reexport_symbol
+        (identifier))
+      (reexport_symbol
+        (identifier))
+      (reexport_symbol
+        (identifier))
+      (reexport_symbol
+        (identifier))))
+  (pub_use_declaration
+    (identifier)
+    (reexport_symbol_list
+      (reexport_symbol
+        (identifier)
+        (identifier)))))
+
+================================================================================
+Complex Expression
+================================================================================
+
+int result = (a + b) * (c - d) / e % f;
+
+---
+(source_file
+  (variable_declaration
+    (type)
+    (identifier)
+    (binary_expression
+      (binary_expression
+        (binary_expression
+          (parenthesized_expression
+            (binary_expression
+              (identifier)
+              (identifier)))
+          (parenthesized_expression
+            (binary_expression
+              (identifier)
+              (identifier))))
+        (identifier))
+      (identifier))))
+
+================================================================================
+Function with Generic Type
+================================================================================
+
+fn process<T>(data: array<T>) -> T {
+    return data[0];
+}
+
+Option Type
+
+Option<int> maybe_number = Option::Some(42);
+Option<str*> maybe_string = Option::None;
+
+---
+(source_file
+  (variable_declaration
+    (option_type
+      (type))
+    (identifier)
+    (call_expression
+      (identifier)
+      (integer_literal)))
+  (variable_declaration
+    (option_type
+      (type))
+    (identifier)
+    (identifier)))
+
+GC Type
+
+gc<int> managed_int = new int(42);
+gc<array<float>> managed_array = new array<float>(10);
+
+---
+(source_file
+  (variable_declaration
+    (gc_type
+      (type))
+    (identifier)
+    (call_expression
+      (identifier)
+      (integer_literal)))
+  (variable_declaration
+    (gc_type
+      (array_type
+        (type)))
+    (identifier)
+    (call_expression
+      (identifier)
+      (integer_literal))))
+
+Arena Reference Type
+
+arena_ref<int> arena_int = arena.alloc<int>(42);
+arena_ref<str*> arena_str = arena.alloc<str*>("hello");
+
+---
+(source_file
+  (variable_declaration
+    (arena_ref_type
+      (type))
+    (identifier)
+    (call_expression
+      (member_expression
+        (identifier)
+        (identifier))
+      (integer_literal)))
+  (variable_declaration
+    (arena_ref_type
+      (type))
+    (identifier)
+    (call_expression
+      (member_expression
+        (identifier)
+        (identifier))
+      (string_literal))))
+
+Arena Type
+
+arena memory_pool;
+arena_ref<int> ptr = memory_pool.alloc<int>(100);
+
+---
+(source_file
+  (variable_declaration
+    (arena_type)
+    (identifier))
+  (variable_declaration
+    (arena_ref_type
+      (type))
+    (identifier)
+    (call_expression
+      (member_expression
+        (identifier)
+        (identifier))
+      (integer_literal))))
+
+Bytes Type
+
+bytes buffer;
+bytes<1024> fixed_buffer;
+bytes<256> small_buffer = bytes::from_array([1, 2, 3, 4]);
+
+---
+(source_file
+  (variable_declaration
+    (bytes_type)
+    (identifier))
+  (variable_declaration
+    (bytes_type
+      (integer_literal))
+    (identifier))
+  (variable_declaration
+    (bytes_type
+      (integer_literal))
+    (identifier)
+    (call_expression
+      (identifier)
+      (array_literal
+        (integer_literal)
+        (integer_literal)
+        (integer_literal)
+        (integer_literal)))))
+
+Struct with Alignas
+
+struct alignas(16) SIMDVec {
+    data: array<float, 4>;
+    padding: int;
+}
+
+---
+(source_file
+  (struct_declaration
+    (alignas_attribute
+      (integer_literal))
+    (identifier)
+    (struct_field_list
+      (struct_field
+        (identifier)
+        (array_type
+          (type)
+          (integer_literal)))
+      (struct_field
+        (identifier)
+        (type)))))
+
+Function with Reference Parameters
+
+fn swap(a: int&, b: int&) -> void {
+    let temp = a;
+    a = b;
+    b = temp;
+}
+
+---
+(source_file
+  (function_declaration
+    (identifier)
+    (parameter_list
+      (parameter
+        (identifier)
+        "&"
+        (type))
+      (parameter
+        (identifier)
+        "&"
+        (type)))
+    (type)
+    (block
+      (variable_declaration
+        (type)
+        (identifier)
+        (identifier))
+      (assignment_statement
+        (identifier)
+        (identifier))
+      (assignment_statement
+        (identifier)
+        (identifier)))))
+
+Method with Self Reference
+
+impl MyClass {
+    fn get_mut_ref(self&) -> &MyClass {
+        return self;
+    }
+}
+
+---
+(source_file
+  (impl_declaration
+    (identifier)
+    (method_declaration
+      (identifier)
+      (parameter_list
+        (method_parameter
+          "self"
+          "&"))
+      (pointer_type
+        (type))
+      (block
+        (return_statement
+          (identifier))))))
+
+Include with Alias
+
+include "io" as io_module;
+include "math" as math_lib;
+
+---
+(source_file
+  (import_statement
+    (identifier)
+    "from"
+    (string_literal)
+    "as"
+    (identifier))
+  (import_statement
+    (identifier)
+    "from"
+    (string_literal)
+    "as"
+    (identifier)))
+
+Pub Use with Wildcard
+
+pub use math: *;
+pub use io: print, read, write;
+
+---
+(source_file
+  (pub_use_declaration
+    (identifier)
+    ":"
+    "*")
+  (pub_use_declaration
+    (identifier)
+    ":"
+    (reexport_symbol_list
+      (reexport_symbol
+        (identifier))
+      (reexport_symbol
+        (identifier))
+      (reexport_symbol
+        (identifier)))))
+
+Pub Use with Aliases
+
+pub use math: add as sum, sub as difference, mul as product;
+pub use io: print as output, read as input;
+
+---
+(source_file
+  (pub_use_declaration
+    (identifier)
+    ":"
+    (reexport_symbol_list
+      (reexport_symbol
+        (identifier)
+        "as"
+        (identifier))
+      (reexport_symbol
+        (identifier)
+        "as"
+        (identifier))
+      (reexport_symbol
+        (identifier)
+        "as"
+        (identifier))))
+  (pub_use_declaration
+    (identifier)
+    ":"
+    (reexport_symbol_list
+      (reexport_symbol
+        (identifier)
+        "as"
+        (identifier))
+      (reexport_symbol
+        (identifier)
+        "as"
+        (identifier)))))
+
+---
+(source_file
+  (function_declaration
+    (identifier)
+    (parameter_list
+      (parameter
+        (identifier)
+        (array_type
+          (generic_type
+            (identifier)))))
+    (generic_type
+      (identifier))
+    (block
+      (return_statement
+        (index_expression
+          (identifier)
+          (integer_literal))))))

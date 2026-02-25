@@ -1,13 +1,17 @@
-; Tree-sitter syntax highlighting for ManV
-; 
-; Highlighting queries for the ManV programming language.
-
-; ============================================================================
 ; Keywords
-; ============================================================================
-
-; Control flow keywords
 [
+  "include"
+  "from"
+  "as"
+  "use"
+  "pub"
+  "typedef"
+  "fn"
+  "struct"
+  "impl"
+  "constructor"
+  "extern"
+  "macro"
   "if"
   "else"
   "while"
@@ -15,110 +19,77 @@
   "return"
   "break"
   "continue"
-] @keyword.control
-
-; Declaration keywords
-[
-  "fn"
-  "struct"
-  "typedef"
-  "const"
-  "extern"
-  "include"
-  "from"
-  "as"
-] @keyword.declaration
-
-; Special keywords
-[
+  "try"
+  "except"
+  "finally"
+  "raise"
+  "new"
   "syscall"
-  "sizeof"
   "alignas"
-] @keyword.special
+  "extends"
+  "sizeof"
+] @keyword
 
-; ============================================================================
-; Types
-; ============================================================================
+; Builtin and generic type names
+[
+  "Option"
+  "Result"
+  "Map"
+  "array"
+  "gc"
+  "arena_ref"
+  "bytes"
+  "arena"
+] @type.builtin
 
-; Primitive types
 (primitive_type) @type.builtin
 
-; Type identifiers (struct names, typedef names)
-(type) @type
+; Declarations
+(function_declaration name: (identifier) @function)
+(method_declaration name: (identifier) @method)
+(macro_declaration name: (identifier) @function.macro)
+(struct_declaration name: (identifier) @type)
+(typedef_declaration name: (identifier) @type)
 
-; Generic type parameters
-(array_type "<" @punctuation.bracket)
-(array_type ">" @punctuation.bracket)
-(array_type "," @punctuation.delimiter)
+; Calls and members
+(call_expression function: (identifier) @function.call)
+(method_call_expression method: (identifier) @method.call)
+(member_expression property: (identifier) @property)
 
-; ============================================================================
-; Functions
-; ============================================================================
+; Variables and params
+(variable_declaration name: (identifier) @variable)
+(parameter name: (identifier) @variable.parameter)
+(struct_field name: (identifier) @property)
 
-; Function declaration name
-(function_declaration
-  name: (identifier) @function)
-
-; Function call
-(call_expression
-  function: (identifier) @function.call)
-
-; Method call
-(method_call_expression
-  method: (identifier) @method.call)
-
-; Function parameters
-(parameter
-  name: (identifier) @variable.parameter)
-
-; ============================================================================
-; Variables
-; ============================================================================
-
-; Variable declarations
-(variable_declaration
-  name: (identifier) @variable)
-
-; Constant declarations
-(constant_declaration
-  name: (identifier) @constant)
-
-; Struct fields
-(struct_field
-  name: (identifier) @variable.member)
-
-; Member access
-(member_expression
-  property: (identifier) @variable.member)
-
-; ============================================================================
 ; Literals
-; ============================================================================
-
-(integer_literal) @constant.numeric.integer
-(float_literal) @constant.numeric.float
+(integer_literal) @number
+(float_literal) @number.float
 (string_literal) @string
-(char_literal) @constant.character
-(boolean_literal) @constant.builtin.boolean
+(char_literal) @string.special
+(boolean_literal) @boolean
 (null_literal) @constant.builtin
 
-; ============================================================================
 ; Comments
-; ============================================================================
-
 (comment) @comment
 
-; ============================================================================
 ; Operators
-; ============================================================================
-
-; Binary operators
 [
   "+"
   "-"
   "*"
   "/"
   "%"
+  "="
+  "+="
+  "-="
+  "*="
+  "/="
+  "%="
+  "&="
+  "|="
+  "^="
+  "<<="
+  ">>="
   "=="
   "!="
   "<"
@@ -134,99 +105,25 @@
   "~"
   "<<"
   ">>"
-] @operator
-
-; Assignment operators
-[
-  "="
-  "+="
-  "-="
-  "*="
-  "/="
-  "%="
-  "&="
-  "|="
-  "^="
-] @operator
-
-; Increment/decrement
-[
   "++"
   "--"
+  "?"
+  "->"
 ] @operator
 
-; ============================================================================
 ; Punctuation
-; ============================================================================
-
-; Brackets
 [
   "("
   ")"
-  "["
-  "]"
   "{"
   "}"
+  "["
+  "]"
 ] @punctuation.bracket
 
-; Delimiters
 [
   ","
   ";"
   ":"
   "."
-  "->"
 ] @punctuation.delimiter
-
-; ============================================================================
-; Special
-; ============================================================================
-
-; Address-of operator
-(addressof_expression
-  "&" @operator)
-
-; Dereference operator
-(dereference_expression
-  "*" @operator)
-
-; Pointer type
-(pointer_type
-  "*" @operator)
-
-; Reference parameter
-(parameter
-  "&" @operator)
-
-; Type cast
-(cast_expression
-  "(" @punctuation.bracket
-  type: (type) @type
-  ")" @punctuation.bracket)
-
-; Option type
-(option_type
-  "Option" @type.builtin)
-
-; GC type
-(gc_type
-  "gc" @type.builtin)
-
-; Arena types
-(arena_type) @type.builtin
-(arena_ref_type
-  "arena_ref" @type.builtin)
-
-; Include statement
-(import_statement
-  (string_literal) @string.special.path)
-
-(import_statement
-  "from" @keyword.declaration)
-
-(import_statement
-  "as" @keyword.declaration)
-
-; Syscall statement
-(syscall_statement
-  "syscall" @keyword.special)
