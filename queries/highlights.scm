@@ -1,129 +1,64 @@
-; Keywords
-[
-  "include"
-  "from"
-  "as"
-  "use"
-  "pub"
-  "typedef"
-  "fn"
-  "struct"
-  "impl"
-  "constructor"
-  "extern"
-  "macro"
-  "if"
-  "else"
-  "while"
-  "for"
-  "return"
-  "break"
-  "continue"
-  "try"
-  "except"
-  "finally"
-  "raise"
-  "new"
-  "syscall"
-  "alignas"
-  "extends"
-  "sizeof"
-] @keyword
+(decorator
+  name: (identifier) @attribute)
 
-; Builtin and generic type names
-[
-  "Option"
-  "Result"
-  "Map"
-  "array"
-  "gc"
-  "arena_ref"
-  "bytes"
-  "arena"
-] @type.builtin
+(function_declaration) @keyword
+(function_declaration
+  name: (identifier) @function)
 
-(primitive_type) @type.builtin
+(type_declaration) @keyword
+(type_declaration
+  name: (identifier) @type)
 
-; Declarations
-(function_declaration name: (identifier) @function)
-(method_declaration name: (identifier) @method)
-(macro_declaration name: (identifier) @function.macro)
-(struct_declaration name: (identifier) @type)
-(typedef_declaration name: (identifier) @type)
+(impl_declaration) @keyword
+(impl_declaration
+  target: (identifier) @type)
 
-; Calls and members
-(call_expression function: (identifier) @function.call)
-(method_call_expression method: (identifier) @method.call)
-(member_expression property: (identifier) @property)
+(macro_declaration) @keyword
+(macro_declaration
+  name: (identifier) @function.macro)
 
-; Variables and params
-(variable_declaration name: (identifier) @variable)
-(parameter name: (identifier) @variable.parameter)
-(struct_field name: (identifier) @property)
+(import_statement) @keyword
+(from_import_statement) @keyword
 
-; Literals
+(let_statement) @keyword
+(let_statement
+  name: (identifier) @variable)
+
+(typed_variable_statement
+  name: (identifier) @variable)
+
+(parameter
+  name: (identifier) @variable.parameter)
+
+(keyword_argument
+  name: (identifier) @property)
+
+(if_statement) @keyword
+(else_clause) @keyword
+(while_statement) @keyword
+(for_statement) @keyword
+(try_statement) @keyword
+(except_clause) @keyword
+(finally_clause) @keyword
+(return_statement) @keyword
+(return_with_value_statement) @keyword
+(raise_statement) @keyword
+(raise_with_value_statement) @keyword
+(break_statement) @keyword
+(continue_statement) @keyword
+
+(builtin_type) @type.builtin
+
+(builtin_call_expression) @type.builtin
+
+(module_segment) @namespace
+
+(member_expression
+  property: (identifier) @property)
+
 (integer_literal) @number
 (float_literal) @number.float
 (string_literal) @string
-(char_literal) @string.special
 (boolean_literal) @boolean
-(null_literal) @constant.builtin
-
-; Comments
+(none_literal) @constant.builtin
 (comment) @comment
-
-; Operators
-[
-  "+"
-  "-"
-  "*"
-  "/"
-  "%"
-  "="
-  "+="
-  "-="
-  "*="
-  "/="
-  "%="
-  "&="
-  "|="
-  "^="
-  "<<="
-  ">>="
-  "=="
-  "!="
-  "<"
-  "<="
-  ">"
-  ">="
-  "&&"
-  "||"
-  "!"
-  "&"
-  "|"
-  "^"
-  "~"
-  "<<"
-  ">>"
-  "++"
-  "--"
-  "?"
-  "->"
-] @operator
-
-; Punctuation
-[
-  "("
-  ")"
-  "{"
-  "}"
-  "["
-  "]"
-] @punctuation.bracket
-
-[
-  ","
-  ";"
-  ":"
-  "."
-] @punctuation.delimiter

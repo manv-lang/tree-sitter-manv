@@ -2,16 +2,8 @@
 # Tree-sitter generated files
 # =========================
 
-# Generated parser sources
-/src/parser.c
-/src/parser.cc
-/src/parser.cpp
-/src/scanner.c
-/src/scanner.cc
-/src/scanner.cpp
-
-# Node types JSON
-/src/node-types.json
+# Generated parser sources are checked in on purpose so downstream editors and
+# bindings do not need to run the generator as part of installation.
 
 # Grammar build artifacts
 *.o
