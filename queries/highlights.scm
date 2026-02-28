@@ -1,9 +1,23 @@
+(docstring) @string.documentation
+
 (decorator
   name: (identifier) @attribute)
 
 (function_declaration) @keyword
 (function_declaration
   name: (identifier) @function)
+
+((function_declaration
+   (decorator
+     name: (identifier) @_getter)
+   name: (identifier) @property)
+ (#eq? @_getter "getter"))
+
+((function_declaration
+   (decorator
+     name: (identifier) @_setter)
+   name: (identifier) @property)
+ (#eq? @_setter "setter"))
 
 (type_declaration) @keyword
 (type_declaration
@@ -23,6 +37,9 @@
 (let_statement) @keyword
 (let_statement
   name: (identifier) @variable)
+
+(type_attribute_declaration
+  name: (identifier) @property)
 
 (typed_variable_statement
   name: (identifier) @variable)
@@ -54,11 +71,25 @@
 (module_segment) @namespace
 
 (member_expression
+  value: (identifier) @_intrin_root
+  property: (identifier) @namespace
+  (#eq? @_intrin_root "__intrin"))
+
+(member_expression
+  value: (member_expression
+    value: (identifier) @_intrin_root
+    property: (identifier) @_cuda_namespace)
+  property: (identifier) @function.builtin
+  (#eq? @_intrin_root "__intrin")
+  (#eq? @_cuda_namespace "cuda"))
+
+(member_expression
   property: (identifier) @property)
 
 (integer_literal) @number
 (float_literal) @number.float
 (string_literal) @string
+(triple_string_literal) @string
 (boolean_literal) @boolean
 (none_literal) @constant.builtin
 (comment) @comment

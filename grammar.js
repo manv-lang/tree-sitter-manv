@@ -51,10 +51,17 @@ module.exports = grammar({
   ],
 
   rules: {
-    source_file: $ => repeat(choice(
-      $._top_level_item,
-      $.newline,
-    )),
+    source_file: $ => seq(
+      repeat($.newline),
+      optional(seq(
+        $.docstring,
+        repeat1($.newline),
+      )),
+      repeat(choice(
+        $._top_level_item,
+        $.newline,
+      )),
+    ),
 
     comment: _ => token(seq("#", /.*/)),
 
@@ -66,6 +73,14 @@ module.exports = grammar({
       seq('"', repeat(choice(/[^"\\\n]+/, seq("\\", /./))), '"'),
       seq("'", repeat(choice(/[^'\\\n]+/, seq("\\", /./))), "'"),
     )),
+    triple_string_literal: _ => token(choice(
+      /"""(?s:.*?)"""/,
+      /'''(?s:.*?)'''/,
+    )),
+    docstring: $ => choice(
+      $.string_literal,
+      $.triple_string_literal,
+    ),
     boolean_literal: _ => choice("true", "false", "True", "False"),
     none_literal: _ => "none",
 
@@ -137,7 +152,7 @@ module.exports = grammar({
       field("name", $.identifier),
       optional(seq("(", field("base", $.identifier), ")")),
       ":",
-      field("body", $.method_block),
+      field("body", $.type_block),
     ),
 
     impl_declaration: $ => seq(
@@ -150,11 +165,40 @@ module.exports = grammar({
     method_block: $ => seq(
       $.newline,
       $.indent,
+      repeat($.newline),
       repeat(choice(
         $.newline,
         seq($.function_declaration, optional($.newline)),
       )),
       $.dedent,
+    ),
+
+    type_block: $ => seq(
+      $.newline,
+      $.indent,
+      repeat($.newline),
+      optional(seq(
+        $.docstring,
+        repeat1($.newline),
+      )),
+      repeat(choice(
+        $.newline,
+        seq($.type_body_item, optional($.newline)),
+      )),
+      $.dedent,
+    ),
+
+    type_body_item: $ => choice(
+      $.type_attribute_declaration,
+      $.function_declaration,
+    ),
+
+    type_attribute_declaration: $ => seq(
+      "let",
+      field("name", $.identifier),
+      optional(seq(":", field("type", $.type))),
+      "=",
+      field("value", $._expression),
     ),
 
     macro_declaration: $ => seq(
@@ -384,6 +428,11 @@ module.exports = grammar({
     block: $ => seq(
       $.newline,
       $.indent,
+      repeat($.newline),
+      optional(seq(
+        $.docstring,
+        repeat1($.newline),
+      )),
       repeat(choice(
         $.newline,
         seq($._statement, optional($.newline)),

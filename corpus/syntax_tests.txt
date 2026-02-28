@@ -115,38 +115,372 @@ fn loop_once() -> void:
       (dedent))))
 
 ================================================================================
-Type Declaration With Method
+Class Declaration With Docstrings And Attribute
 ================================================================================
 
-type Vec:
-    fn size() -> int:
-        return 0
+"""Module documentation."""
+
+class Math:
+    "Scalar math utilities."
+    let pi: f32 = 3.14
+    fn sqrt(x: f32) -> f32:
+        """Returns sqrt(x)."""
+        return x
+
+---
+(source_file
+  (docstring)
+  (newline)
+  (type_declaration
+    name: (identifier)
+    body: (type_block
+      (newline)
+      (indent)
+      (docstring)
+      (newline)
+      (type_body_item
+        (type_attribute_declaration
+          name: (identifier)
+          type: (type
+            (builtin_type))
+          value: (or_expression
+            (and_expression
+              (equality_expression
+                (comparison_expression
+                  (additive_expression
+                    (multiplicative_expression
+                      (unary_expression
+                        (postfix_expression
+                          (primary_expression
+                            (float_literal)))))))))))
+      (newline)
+      (type_body_item
+        (function_declaration
+          name: (identifier)
+          (parameter
+            name: (identifier)
+            type: (type
+              (builtin_type)))
+          return_type: (type
+            (builtin_type))
+          body: (block
+            (newline)
+            (indent)
+            (docstring)
+            (newline)
+            (return_with_value_statement
+              value: (or_expression
+                (and_expression
+                  (equality_expression
+                    (comparison_expression
+                      (additive_expression
+                        (multiplicative_expression
+                          (unary_expression
+                            (postfix_expression
+                              (primary_expression
+                                (identifier))))))))))
+            (newline)
+            (dedent))))
+      (dedent))))
+
+================================================================================
+Accessor Decorators In Class Bodies
+================================================================================
+
+class User:
+    @getter
+    fn name(self) -> str:
+        return self._name
+
+    @setter
+    fn name(self, value: str) -> none:
+        self._name = value
 
 ---
 (source_file
   (type_declaration
     name: (identifier)
-    body: (method_block
+    body: (type_block
       (newline)
       (indent)
-      (function_declaration
+      (type_body_item
+        (function_declaration
+          (decorator
+            name: (identifier))
+          (newline)
+          name: (identifier)
+          (parameter
+            name: (identifier))
+          return_type: (type
+            (builtin_type))
+          body: (block
+            (newline)
+            (indent)
+            (return_with_value_statement
+              value: (or_expression
+                (and_expression
+                  (equality_expression
+                    (comparison_expression
+                      (additive_expression
+                        (multiplicative_expression
+                          (unary_expression
+                            (postfix_expression
+                              (member_expression
+                                value: (primary_expression
+                                  (identifier))
+                                property: (identifier))))))))))
+            (newline)
+            (dedent))))
+      (newline)
+      (type_body_item
+        (function_declaration
+          (decorator
+            name: (identifier))
+          (newline)
+          name: (identifier)
+          (parameter
+            name: (identifier))
+          (parameter
+            name: (identifier)
+            type: (type
+              (builtin_type)))
+          return_type: (type
+            (builtin_type))
+          body: (block
+            (newline)
+            (indent)
+            (attribute_assignment_statement
+              target: (identifier)
+              property: (identifier)
+              value: (or_expression
+                (and_expression
+                  (equality_expression
+                    (comparison_expression
+                      (additive_expression
+                        (multiplicative_expression
+                          (unary_expression
+                            (postfix_expression
+                              (primary_expression
+                                (identifier))))))))))
+            (newline)
+            (dedent))))
+      (dedent))))
+
+================================================================================
+String Literal Not In First Position
+================================================================================
+
+fn main() -> int:
+    let x = 1
+    "not a docstring"
+    return x
+
+---
+(source_file
+  (function_declaration
+    name: (identifier)
+    return_type: (type
+      (builtin_type))
+    body: (block
+      (newline)
+      (indent)
+      (let_statement
         name: (identifier)
-        return_type: (type
-          (builtin_type))
-        body: (block
+        value: (or_expression
+          (and_expression
+            (equality_expression
+              (comparison_expression
+                (additive_expression
+                  (multiplicative_expression
+                    (unary_expression
+                      (postfix_expression
+                        (primary_expression
+                          (integer_literal))))))))))
+      (newline)
+      (expression_statement
+        (or_expression
+          (and_expression
+            (equality_expression
+              (comparison_expression
+                (additive_expression
+                  (multiplicative_expression
+                    (unary_expression
+                      (postfix_expression
+                        (primary_expression
+                          (string_literal))))))))))
+      (newline)
+      (return_with_value_statement
+        value: (or_expression
+          (and_expression
+            (equality_expression
+              (comparison_expression
+                (additive_expression
+                  (multiplicative_expression
+                    (unary_expression
+                      (postfix_expression
+                        (primary_expression
+                          (identifier))))))))))
+      (newline)
+      (dedent))))
+
+================================================================================
+Nested CUDA Intrinsic Chain
+================================================================================
+
+fn main() -> int:
+    return __intrin.cuda.device_count()
+
+---
+(source_file
+  (function_declaration
+    name: (identifier)
+    return_type: (type
+      (builtin_type))
+    body: (block
+      (newline)
+      (indent)
+      (return_with_value_statement
+        value: (or_expression
+          (and_expression
+            (equality_expression
+              (comparison_expression
+                (additive_expression
+                  (multiplicative_expression
+                    (unary_expression
+                      (postfix_expression
+                        (call_expression
+                          function: (member_expression
+                            value: (member_expression
+                              value: (identifier)
+                              property: (identifier))
+                            property: (identifier)))))))))))
+      (newline)
+      (dedent))))
+
+================================================================================
+TensorMath Chain
+================================================================================
+
+fn main() -> none:
+    TensorMath([1.0, -2.0, 3.0]).relu().sum()
+
+---
+(source_file
+  (function_declaration
+    name: (identifier)
+    return_type: (type
+      (builtin_type))
+    body: (block
+      (newline)
+      (indent)
+      (expression_statement
+        (or_expression
+          (and_expression
+            (equality_expression
+              (comparison_expression
+                (additive_expression
+                  (multiplicative_expression
+                    (unary_expression
+                      (postfix_expression
+                        (call_expression
+                          function: (member_expression
+                            value: (call_expression
+                              function: (member_expression
+                                value: (call_expression
+                                  function: (identifier)
+                                  (or_expression
+                                    (and_expression
+                                      (equality_expression
+                                        (comparison_expression
+                                          (additive_expression
+                                            (multiplicative_expression
+                                              (unary_expression
+                                                (postfix_expression
+                                                  (primary_expression
+                                                    (array_expression
+                                                      (or_expression
+                                                        (and_expression
+                                                          (equality_expression
+                                                            (comparison_expression
+                                                              (additive_expression
+                                                                (multiplicative_expression
+                                                                  (unary_expression
+                                                                    (postfix_expression
+                                                                      (primary_expression
+                                                                        (float_literal))))))))))
+                                                      (or_expression
+                                                        (and_expression
+                                                          (equality_expression
+                                                            (comparison_expression
+                                                              (additive_expression
+                                                                (multiplicative_expression
+                                                                  (unary_expression
+                                                                    (postfix_expression
+                                                                      (primary_expression
+                                                                        (unary_expression
+                                                                          operator: "-"
+                                                                          argument: (unary_expression
+                                                                            (postfix_expression
+                                                                              (primary_expression
+                                                                                (float_literal))))))))))))))
+                                                      (or_expression
+                                                        (and_expression
+                                                          (equality_expression
+                                                            (comparison_expression
+                                                              (additive_expression
+                                                                (multiplicative_expression
+                                                                  (unary_expression
+                                                                    (postfix_expression
+                                                                      (primary_expression
+                                                                        (float_literal))))))))))))))))
+                                property: (identifier))
+                              )
+                            property: (identifier)))))))))
+      (newline)
+      (dedent))))
+
+================================================================================
+Static Method Decorator
+================================================================================
+
+class Math:
+    @static_method
+    fn abs(x: int) -> int:
+        return x
+
+---
+(source_file
+  (type_declaration
+    name: (identifier)
+    body: (type_block
+      (newline)
+      (indent)
+      (type_body_item
+        (function_declaration
+          (decorator
+            name: (identifier))
           (newline)
-          (indent)
-          (return_with_value_statement
-            value: (or_expression
-              (and_expression
-                (equality_expression
-                  (comparison_expression
-                    (additive_expression
-                      (multiplicative_expression
-                        (unary_expression
-                          (postfix_expression
-                            (primary_expression
-                              (integer_literal))))))))))
-          (newline)
-          (dedent)))
+          name: (identifier)
+          (parameter
+            name: (identifier)
+            type: (type
+              (builtin_type)))
+          return_type: (type
+            (builtin_type))
+          body: (block
+            (newline)
+            (indent)
+            (return_with_value_statement
+              value: (or_expression
+                (and_expression
+                  (equality_expression
+                    (comparison_expression
+                      (additive_expression
+                        (multiplicative_expression
+                          (unary_expression
+                            (postfix_expression
+                              (primary_expression
+                                (identifier))))))))))
+            (newline)
+            (dedent)))))
       (dedent))))
